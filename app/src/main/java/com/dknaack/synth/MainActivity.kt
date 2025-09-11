@@ -5,6 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.rememberScrollableState
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,11 +57,17 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.googlefonts.Font
@@ -198,7 +207,7 @@ fun PrimaryButtonRow() {
         ) }
         item { PrimaryButton(
             onClick = { },
-            imageVector = Icons.Filled.Circle,
+            imageVector = Icons.Filled.PlayArrow,
             contentDescription = "Button",
             color = MaterialTheme.colorScheme.tertiaryContainer,
         ) }
@@ -218,17 +227,30 @@ fun PrimaryButton(
     contentDescription: String,
     color: Color,
 ) {
-    FilledIconButton(
-        onClick = onClick,
-        shape = RoundedCornerShape(8.dp),
-        modifier = Modifier.aspectRatio(1f),
-        colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = color,
-        )
+    var rotation by remember { mutableFloatStateOf(0f) }
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(8.dp))
+            .background(color)
+            .scrollable(
+                orientation = Orientation.Vertical,
+                state = rememberScrollableState { delta ->
+                    rotation += delta
+                    delta
+                },
+            )
     ) {
         Icon(
             imageVector = imageVector,
             contentDescription = contentDescription,
+            modifier = Modifier
+                .height(32.dp)
+                .graphicsLayer {
+                    rotationZ = rotation
+                },
         )
     }
 }
