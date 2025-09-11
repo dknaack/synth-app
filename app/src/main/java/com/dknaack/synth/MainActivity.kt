@@ -25,32 +25,30 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AcUnit
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Equalizer
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.MusicOff
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.OpenWith
+import androidx.compose.material.icons.filled.Piano
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.ScreenRotationAlt
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Square
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.WatchLater
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
@@ -263,16 +261,16 @@ fun SecondaryButtonGrid() {
         3,
         4,
         5,
-        Icons.Default.AcUnit,
-        Icons.Default.Notifications,
-        Icons.Default.Lock,
-        Icons.Default.Info,
+        Icons.Default.Refresh,
+        Icons.Default.Piano,
+        Icons.Default.Edit,
+        Icons.Default.Equalizer,
         Icons.Default.Settings,
-        Icons.Default.WatchLater,
-        Icons.Default.MusicOff,
+        Icons.AutoMirrored.Default.ArrowBack,
         Icons.Default.MusicNote,
-        Icons.Default.Mic,
-        Icons.Default.OpenWith,
+        Icons.Default.ScreenRotationAlt,
+        Icons.Default.MicOff,
+        Icons.AutoMirrored.Default.ArrowForward,
     )
 
     val provider = GoogleFont.Provider(
@@ -293,12 +291,14 @@ fun SecondaryButtonGrid() {
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         items(icons.withIndex().toList()) { (index, icon) ->
+            val outerRadius = 8.dp
+            val innerRadius = 2.dp
             val shape = when (index) {
-                0 -> RoundedCornerShape(topStart = 8.dp)
-                4 -> RoundedCornerShape(topEnd = 8.dp)
-                14 -> RoundedCornerShape(bottomEnd = 8.dp)
-                10 -> RoundedCornerShape(bottomStart = 8.dp)
-                else -> RoundedCornerShape(2.dp)
+                0 -> RoundedCornerShape(topStart = outerRadius)
+                4 -> RoundedCornerShape(topEnd = outerRadius)
+                14 -> RoundedCornerShape(bottomEnd = outerRadius)
+                10 -> RoundedCornerShape(bottomStart = outerRadius)
+                else -> RoundedCornerShape(innerRadius)
             }
 
             SecondaryButton(shape) {
