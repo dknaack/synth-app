@@ -61,6 +61,8 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.googlefonts.Font
+import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -251,6 +253,17 @@ fun SecondaryButtonGrid() {
         Icons.Default.OpenWith,
     )
 
+    val provider = GoogleFont.Provider(
+        providerAuthority = "com.google.android.gms.fonts",
+        providerPackage = "com.google.android.gms",
+        certificates = R.array.com_google_android_gms_fonts_certs,
+    )
+
+    val fontName = GoogleFont("Courier Prime")
+    val fontFamily = FontFamily(
+        Font(fontName, provider)
+    )
+
     LazyVerticalGrid(
         columns = GridCells.Fixed(5),
         modifier = Modifier.fillMaxWidth(),
@@ -275,8 +288,8 @@ fun SecondaryButtonGrid() {
                 } else if (icon is Int) {
                     Text(
                         text = "${index+1}",
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 30.sp,
+                        fontFamily = fontFamily,
+                        fontSize = 32.sp,
                     )
                 }
             }
