@@ -1,5 +1,6 @@
 package com.dknaack.synth
 
+import android.media.AudioManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -75,13 +76,37 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dknaack.synth.ui.theme.SynthTheme
 
+
 class MainActivity : ComponentActivity() {
+    companion object {
+        init {
+            System.loadLibrary("synth")
+        }
+    }
+
+    external fun playSound()
+    external fun stopSound()
+    external fun setDefaultStreamValues(sampleRate: Int, framesPerBurst: Int)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val myAudioMgr = getSystemService(AUDIO_SERVICE) as AudioManager
+        val sampleRateStr = myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE)
+        val defaultSampleRate = sampleRateStr.toInt()
+        val framesPerBurstStr =
+            myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER)
+        val defaultFramesPerBurst = framesPerBurstStr.toInt()
+
+        setDefaultStreamValues(defaultSampleRate, defaultFramesPerBurst)
+
         enableEdgeToEdge()
         setContent {
             SynthTheme {
-                MainScreen()
+                MainScreen(
+                    onPlay = { playSound() },
+                    onStop = { stopSound() }
+                )
             }
         }
     }
@@ -89,7 +114,10 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
+fun MainScreen(
+    onPlay: () -> Unit,
+    onStop: () -> Unit,
+) {
     Scaffold { innerPadding ->
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -98,6 +126,14 @@ fun MainScreen() {
                 .padding(innerPadding)
                 .padding(16.dp),
         ) {
+            Button(onPlay) {
+                Text("Play")
+            }
+
+            Button(onStop) {
+                Text("Stop")
+            }
+
             Screen()
             SecondaryButtonGrid()
             PrimaryButtonRow()
@@ -402,6 +438,9 @@ fun WhiteKeyboardButton(
 @Composable
 fun MainScreenPreview() {
     SynthTheme {
-        MainScreen()
+        MainScreen(
+            onPlay = { },
+            onStop = { },
+        )
     }
 }

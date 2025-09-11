@@ -16,6 +16,14 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            cmake {
+                cppFlags += ""
+                arguments += listOf(
+                    "-DANDROID_STL=c++_shared"
+                )
+            }
+        }
     }
 
     buildTypes {
@@ -36,10 +44,18 @@ android {
     }
     buildFeatures {
         compose = true
+        prefab = true
+    }
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
     }
 }
 
 dependencies {
+    implementation(libs.oboe)
     implementation(libs.androidx.compose.ui.text.googlefonts)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.core.ktx)
