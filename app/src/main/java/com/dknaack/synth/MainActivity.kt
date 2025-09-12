@@ -126,15 +126,7 @@ fun MainScreen(
                 .padding(innerPadding)
                 .padding(16.dp),
         ) {
-            Button(onPlay) {
-                Text("Play")
-            }
-
-            Button(onStop) {
-                Text("Stop")
-            }
-
-            Screen()
+            MainDisplay()
             SecondaryButtonGrid()
             PrimaryButtonRow()
             KeyboardButtons(Modifier.weight(1f))
@@ -143,7 +135,7 @@ fun MainScreen(
 }
 
 @Composable
-fun Screen() {
+fun MainDisplay() {
     OutlinedCard(
         shape = RoundedCornerShape(8.dp),
     ) {
