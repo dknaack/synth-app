@@ -84,6 +84,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    external fun startRecording()
+    external fun stopRecording()
     external fun playSound()
     external fun stopSound()
     external fun setDefaultStreamValues(sampleRate: Int, framesPerBurst: Int)
