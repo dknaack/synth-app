@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.dknaack.synth"
-        minSdk = 24
+        minSdk = 28
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -52,7 +52,6 @@ android {
 }
 
 dependencies {
-    implementation(libs.oboe)
     implementation(libs.androidx.compose.ui.text.googlefonts)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.core.ktx)
