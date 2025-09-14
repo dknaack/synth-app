@@ -1,8 +1,8 @@
 #include <jni.h>
-#include <oboe/Oboe.h>
+#include <math.h>
 #include <aaudio/AAudio.h>
 
-static AAudioStream *output_stream = nullptr;
+static AAudioStream *output_stream = NULL;
 static double phase = 0.0;
 static int32_t sample_rate;
 static int32_t frames_per_burst;
@@ -10,7 +10,7 @@ static int32_t frames_per_burst;
 static aaudio_data_callback_result_t
 play_callback(AAudioStream *stream, void *user_data, void *audio_data, int32_t num_frames)
 {
-    float *output = (float *)audio_data;
+    float *output = audio_data;
     double freq = 440.0; // A4
     double phase_increment = (2.0 * M_PI * freq) / sample_rate;
 
@@ -31,8 +31,6 @@ record_callback(AAudioStream *stream, void *user_data, void *audio_data, int32_t
     return AAUDIO_CALLBACK_RESULT_CONTINUE;
 }
 
-extern "C" {
-
 JNIEXPORT void JNICALL
 Java_com_dknaack_synth_MainActivity_setDefaultStreamValues(
         JNIEnv *env, jobject type, jint sampleRate, jint framesPerBurst)
@@ -43,7 +41,7 @@ Java_com_dknaack_synth_MainActivity_setDefaultStreamValues(
 
 JNIEXPORT void JNICALL
 Java_com_dknaack_synth_MainActivity_playSound(JNIEnv *env, jobject thiz) {
-    AAudioStreamBuilderStruct *builder;
+    AAudioStreamBuilder *builder;
     AAudio_createStreamBuilder(&builder);
     AAudioStreamBuilder_setPerformanceMode(builder, AAUDIO_PERFORMANCE_MODE_LOW_LATENCY);
     AAudioStreamBuilder_setSharingMode(builder, AAUDIO_SHARING_MODE_EXCLUSIVE);
@@ -62,7 +60,7 @@ Java_com_dknaack_synth_MainActivity_stopSound(JNIEnv *env, jobject thiz) {
     if (output_stream) {
         AAudioStream_requestStop(output_stream);
         AAudioStream_close(output_stream);
-        output_stream = nullptr;
+        output_stream = NULL;
     }
 }
 
@@ -73,7 +71,5 @@ Java_com_dknaack_synth_MainActivity_startRecording(JNIEnv *env, jobject thiz) {
 
 JNIEXPORT void JNICALL
 Java_com_dknaack_synth_MainActivity_stopRecording(JNIEnv *env, jobject thiz) {
-
-}
 
 }
