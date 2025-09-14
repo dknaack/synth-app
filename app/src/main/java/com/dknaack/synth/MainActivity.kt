@@ -90,6 +90,13 @@ class MainActivity : ComponentActivity() {
     external fun stopSound()
     external fun setDefaultStreamValues(sampleRate: Int, framesPerBurst: Int)
 
+    fun onEvent(event: SynthEvent) {
+        when (event) {
+            SynthEvent.Play -> { playSound() }
+            SynthEvent.Stop -> { stopSound() }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -105,10 +112,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SynthTheme {
-                MainScreen(
-                    onPlay = { playSound() },
-                    onStop = { stopSound() }
-                )
+                MainScreen(::onEvent)
             }
         }
     }
@@ -117,8 +121,7 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    onPlay: () -> Unit,
-    onStop: () -> Unit,
+    onEvent: (SynthEvent) -> Unit,
 ) {
     Scaffold { innerPadding ->
         Column(
@@ -128,16 +131,18 @@ fun MainScreen(
                 .padding(innerPadding)
                 .padding(16.dp),
         ) {
-            MainDisplay()
-            SecondaryButtonGrid()
-            PrimaryButtonRow()
-            KeyboardButtons(Modifier.weight(1f))
+            MainDisplay(onEvent)
+            SecondaryButtonGrid(onEvent)
+            PrimaryButtonRow(onEvent)
+            KeyboardButtons(onEvent, modifier = Modifier.weight(1f))
         }
     }
 }
 
 @Composable
-fun MainDisplay() {
+fun MainDisplay(
+    onEvent: (SynthEvent) -> Unit,
+) {
     OutlinedCard(
         shape = RoundedCornerShape(8.dp),
     ) {
@@ -178,12 +183,12 @@ fun MainDisplay() {
                 ) {
                     Icon(
                         imageVector = Icons.Default.FastRewind,
-                        contentDescription = "Play",
+                        contentDescription = "Fast Rewind",
                     )
                 }
                 IconButton(
                     modifier = Modifier.weight(1f),
-                    onClick = { },
+                    onClick = { onEvent(SynthEvent.Play) },
                 ) {
                     Icon(
                         imageVector = Icons.Default.PlayArrow,
@@ -196,12 +201,12 @@ fun MainDisplay() {
                 ) {
                     Icon(
                         imageVector = Icons.Filled.FastForward,
-                        contentDescription = "Stop",
+                        contentDescription = "Fast Forward",
                     )
                 }
                 IconButton(
                     modifier = Modifier.weight(1f),
-                    onClick = { },
+                    onClick = { onEvent(SynthEvent.Stop) },
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Stop,
@@ -214,7 +219,9 @@ fun MainDisplay() {
 }
 
 @Composable
-fun PrimaryButtonRow() {
+fun PrimaryButtonRow(
+    onEvent: (SynthEvent) -> Unit,
+) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
         modifier = Modifier.fillMaxWidth(),
@@ -284,7 +291,9 @@ fun PrimaryButton(
 }
 
 @Composable
-fun SecondaryButtonGrid() {
+fun SecondaryButtonGrid(
+    onEvent: (SynthEvent) -> Unit,
+) {
     val icons = listOf(
         1,
         2,
@@ -368,6 +377,7 @@ fun SecondaryButton(
 
 @Composable
 fun KeyboardButtons(
+    onEvent: (SynthEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -433,8 +443,7 @@ fun WhiteKeyboardButton(
 fun MainScreenPreview() {
     SynthTheme {
         MainScreen(
-            onPlay = { },
-            onStop = { },
+            onEvent = { }
         )
     }
 }
