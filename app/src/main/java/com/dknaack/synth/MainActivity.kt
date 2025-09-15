@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.rememberScrollableState
@@ -36,6 +37,7 @@ import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.Piano
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
@@ -56,8 +58,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -75,6 +79,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dknaack.synth.ui.theme.SynthTheme
+import kotlin.getValue
 
 
 class MainActivity : ComponentActivity() {
@@ -84,18 +89,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    external fun startRecording()
-    external fun stopRecording()
-    external fun playSound()
-    external fun stopSound()
-    external fun setDefaultStreamValues(sampleRate: Int, framesPerBurst: Int)
 
-    fun onEvent(event: SynthEvent) {
-        when (event) {
-            SynthEvent.Play -> { playSound() }
-            SynthEvent.Stop -> { stopSound() }
-        }
-    }
+    private val synthViewModel: SynthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -107,12 +102,13 @@ class MainActivity : ComponentActivity() {
             myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER)
         val defaultFramesPerBurst = framesPerBurstStr.toInt()
 
-        setDefaultStreamValues(defaultSampleRate, defaultFramesPerBurst)
-
         enableEdgeToEdge()
         setContent {
             SynthTheme {
-                MainScreen(::onEvent)
+                MainScreen(
+                    synthViewModel::onEvent,
+                    synthViewModel.state.collectAsState().value,
+                )
             }
         }
     }
@@ -122,6 +118,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen(
     onEvent: (SynthEvent) -> Unit,
+    state: SynthState,
 ) {
     Scaffold { innerPadding ->
         Column(
@@ -131,7 +128,7 @@ fun MainScreen(
                 .padding(innerPadding)
                 .padding(16.dp),
         ) {
-            MainDisplay(onEvent)
+            MainDisplay(onEvent, state)
             SecondaryButtonGrid(onEvent)
             PrimaryButtonRow(onEvent)
             KeyboardButtons(onEvent, modifier = Modifier.weight(1f))
@@ -142,6 +139,7 @@ fun MainScreen(
 @Composable
 fun MainDisplay(
     onEvent: (SynthEvent) -> Unit,
+    state: SynthState,
 ) {
     OutlinedCard(
         shape = RoundedCornerShape(8.dp),
@@ -188,10 +186,14 @@ fun MainDisplay(
                 }
                 IconButton(
                     modifier = Modifier.weight(1f),
-                    onClick = { onEvent(SynthEvent.Play) },
+                    onClick = { onEvent(SynthEvent.PlayPause) },
                 ) {
                     Icon(
-                        imageVector = Icons.Default.PlayArrow,
+                        imageVector = if (state.isPlaying || state.isRecording) {
+                            Icons.Default.Pause
+                        } else {
+                            Icons.Default.PlayArrow
+                        },
                         contentDescription = "Play",
                     )
                 }
@@ -443,7 +445,8 @@ fun WhiteKeyboardButton(
 fun MainScreenPreview() {
     SynthTheme {
         MainScreen(
-            onEvent = { }
+            onEvent = { },
+            state = SynthState()
         )
     }
 }
