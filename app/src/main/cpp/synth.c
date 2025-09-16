@@ -9,6 +9,7 @@ typedef struct {
     AAudioStream *input_stream;
     int32_t sample_rate;
     int32_t frames_per_burst;
+    double phase;
 } AudioEngine;
 
 static aaudio_data_callback_result_t
@@ -21,7 +22,7 @@ output_callback(AAudioStream *stream, void *user_data, void *audio_data, int32_t
     int16_t *output = audio_data;
     double freq = 440.0; // A4
     double phase_increment = (2.0 * M_PI * freq) / sample_rate;
-    static double phase = 0.0;
+    double phase = engine->phase;
 
     for (int i = 0; i < num_frames; i++) {
         int16_t sample = (int16_t)(32767.0 * sin(phase));
@@ -35,6 +36,7 @@ output_callback(AAudioStream *stream, void *user_data, void *audio_data, int32_t
         }
     }
 
+    engine->phase = phase;
     return AAUDIO_CALLBACK_RESULT_CONTINUE;
 }
 
