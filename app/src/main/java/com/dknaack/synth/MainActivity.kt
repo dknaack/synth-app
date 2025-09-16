@@ -1,6 +1,5 @@
 package com.dknaack.synth
 
-import android.media.AudioManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -62,7 +61,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -80,21 +78,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dknaack.synth.ui.theme.SynthTheme
-import kotlin.getValue
 
 
 class MainActivity : ComponentActivity() {
-    companion object {
-        init {
-            System.loadLibrary("synth")
-        }
-    }
-
-
+    private val audioEngine by lazy { AudioEngine(this) }
     private val synthViewModel: SynthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        audioEngine.start()
 
         enableEdgeToEdge()
         setContent {
@@ -105,6 +97,11 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        audioEngine.stop()
     }
 }
 
