@@ -1,22 +1,27 @@
 #include <jni.h>
 #include <math.h>
 #include <aaudio/AAudio.h>
+#include <string.h>
+#include <stdlib.h>
 
-static AAudioStream *record_stream = NULL;
-static AAudioStream *output_stream = NULL;
-static double phase = 0.0;
-static int32_t default_sample_rate = 48000;
-static int32_t default_frames_per_burst;
+typedef struct {
+    AAudioStream *output_stream;
+    AAudioStream *input_stream;
+    int32_t sample_rate;
+    int32_t frames_per_burst;
+} AudioEngine;
 
 static aaudio_data_callback_result_t
-play_callback(AAudioStream *stream, void *user_data, void *audio_data, int32_t num_frames)
+output_callback(AAudioStream *stream, void *user_data, void *audio_data, int32_t num_frames)
 {
+    AudioEngine *engine = user_data;
     int32_t sample_rate = AAudioStream_getSampleRate(stream);
     int32_t num_channels = AAudioStream_getChannelCount(stream);
 
     int16_t *output = audio_data;
     double freq = 440.0; // A4
     double phase_increment = (2.0 * M_PI * freq) / sample_rate;
+    static double phase = 0.0;
 
     for (int i = 0; i < num_frames; i++) {
         int16_t sample = (int16_t)(32767.0 * sin(phase));
@@ -34,63 +39,67 @@ play_callback(AAudioStream *stream, void *user_data, void *audio_data, int32_t n
 }
 
 static aaudio_data_callback_result_t
-record_callback(AAudioStream *stream, void *user_data, void *audio_data, int32_t num_frames)
+input_callback(AAudioStream *stream, void *user_data, void *audio_data, int32_t num_frames)
 {
+    AudioEngine *engine = user_data;
     return AAUDIO_CALLBACK_RESULT_CONTINUE;
 }
 
-JNIEXPORT void JNICALL
-Java_com_dknaack_synth_MainActivity_setDefaultStreamValues(
-        JNIEnv *env, jobject type, jint sample_rate, jint frames_per_burst)
+JNIEXPORT jlong JNICALL
+Java_com_dknaack_synth_AudioEngine_startEngine(
+        JNIEnv *env, jobject thiz, jint sample_rate, jint frames_per_burst)
 {
-    default_sample_rate = (int32_t)sample_rate;
-    default_frames_per_burst = (int32_t)frames_per_burst;
-}
-
-JNIEXPORT void JNICALL
-Java_com_dknaack_synth_MainActivity_playSound(JNIEnv *env, jobject thiz) {
-    AAudioStreamBuilder *builder;
-    AAudio_createStreamBuilder(&builder);
-    AAudioStreamBuilder_setPerformanceMode(builder, AAUDIO_PERFORMANCE_MODE_LOW_LATENCY);
-    AAudioStreamBuilder_setSharingMode(builder, AAUDIO_SHARING_MODE_EXCLUSIVE);
-    AAudioStreamBuilder_setFormat(builder, AAUDIO_FORMAT_PCM_I16);
-    AAudioStreamBuilder_setChannelCount(builder, 1);
-    AAudioStreamBuilder_setSampleRate(builder, default_sample_rate);
-    AAudioStreamBuilder_setDataCallback(builder, play_callback, NULL);
-
-    AAudioStreamBuilder_openStream(builder, &output_stream);
-    AAudioStreamBuilder_delete(builder);
-
-    if (output_stream) {
-        AAudioStream_requestStart(output_stream);
+    AudioEngine *engine = calloc(1, sizeof(*engine));
+    if (!engine) {
+        return 0;
     }
-}
 
-JNIEXPORT void JNICALL
-Java_com_dknaack_synth_MainActivity_stopSound(JNIEnv *env, jobject thiz) {
-    if (output_stream) {
-        AAudioStream_requestStop(output_stream);
-        AAudioStream_close(output_stream);
-        output_stream = NULL;
+    engine->sample_rate = (int32_t)sample_rate;
+    engine->frames_per_burst = (int32_t)frames_per_burst;
+
+    // Initialize an output stream
+    {
+        AAudioStreamBuilder *builder = NULL;
+        AAudio_createStreamBuilder(&builder);
+        AAudioStreamBuilder_setPerformanceMode(builder, AAUDIO_PERFORMANCE_MODE_LOW_LATENCY);
+        AAudioStreamBuilder_setSharingMode(builder, AAUDIO_SHARING_MODE_EXCLUSIVE);
+        AAudioStreamBuilder_setFormat(builder, AAUDIO_FORMAT_PCM_I16);
+        AAudioStreamBuilder_setChannelCount(builder, 1);
+        AAudioStreamBuilder_setSampleRate(builder, engine->sample_rate);
+        AAudioStreamBuilder_setDataCallback(builder, output_callback, engine);
+
+        AAudioStreamBuilder_openStream(builder, &engine->output_stream);
+        AAudioStream_requestStart(engine->output_stream);
+        AAudioStreamBuilder_delete(builder);
     }
+
+    // Initialize an input stream
+    {
+        AAudioStreamBuilder *builder = NULL;
+        AAudio_createStreamBuilder(&builder);
+        AAudioStreamBuilder_setDirection(builder, AAUDIO_DIRECTION_INPUT);
+        AAudioStreamBuilder_setSampleRate(builder, engine->sample_rate);
+        AAudioStreamBuilder_setChannelCount(builder, 1);
+        AAudioStreamBuilder_setFormat(builder, AAUDIO_FORMAT_PCM_I16);
+        AAudioStreamBuilder_setDataCallback(builder, input_callback, engine);
+
+        AAudioStream *record_stream;
+        AAudioStreamBuilder_openStream(builder, &record_stream);
+        AAudioStreamBuilder_delete(builder);
+        AAudioStream_requestStart(record_stream);
+    }
+
+    return (jlong)engine;
 }
 
 JNIEXPORT void JNICALL
-Java_com_dknaack_synth_MainActivity_startRecording(JNIEnv *env, jobject thiz) {
-    AAudioStreamBuilder *builder;
-
-    AAudio_createStreamBuilder(&builder);
-    AAudioStreamBuilder_setDirection(builder, AAUDIO_DIRECTION_INPUT);
-    AAudioStreamBuilder_setSampleRate(builder, default_sample_rate);
-    AAudioStreamBuilder_setChannelCount(builder, 1);
-    AAudioStreamBuilder_setFormat(builder, AAUDIO_FORMAT_PCM_I16);
-
-    AAudioStreamBuilder_openStream(builder, &record_stream);
-    AAudioStreamBuilder_delete(builder);
-    AAudioStream_requestStart(record_stream);
-}
-
-JNIEXPORT void JNICALL
-Java_com_dknaack_synth_MainActivity_stopRecording(JNIEnv *env, jobject thiz) {
-
+Java_com_dknaack_synth_AudioEngine_stopEngine(JNIEnv *env, jobject thiz, jlong ptr)
+{
+    AudioEngine *engine = (AudioEngine *)ptr;
+    if (engine) {
+        AAudioStream_requestStop(engine->output_stream);
+        AAudioStream_close(engine->output_stream);
+        AAudioStream_close(engine->input_stream);
+        free(engine);
+    }
 }
