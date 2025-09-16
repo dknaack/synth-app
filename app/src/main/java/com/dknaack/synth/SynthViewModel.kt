@@ -7,24 +7,38 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class SynthViewModel: ViewModel() {
+class SynthViewModel(
+    private val audioEngine: AudioEngine,
+): ViewModel() {
     private val _state = MutableStateFlow(SynthState())
     val state = _state.asStateFlow()
 
     fun onEvent(event: SynthEvent) {
         when (event) {
             SynthEvent.PlayPause -> {
-                _state.update { it.copy(isPlaying = !it.isPlaying) }
+                _state.update {
+                    if (it.isPlaying) {
+                        audioEngine.stopPlayback()
+                        it.copy(isPlaying = false)
+                    } else if (it.isRecording) {
+                        audioEngine.stopRecording()
+                        it.copy(isRecording = false)
+                    } else {
+                        audioEngine.startPlayback()
+                        it.copy(isPlaying = true)
+                    }
+                }
             }
             SynthEvent.Record -> {
-                _state.update { it.copy(isRecording = true) }
+                if (!state.value.isPlaying) {
+                    _state.update { it.copy(isRecording = true) }
+                    audioEngine.startRecording()
+                }
             }
             SynthEvent.Stop -> {
-                if (state.value.isPlaying) {
-                    _state.update { it.copy(isPlaying = false) }
-                } else if (state.value.isRecording) {
-                    _state.update { it.copy(isRecording = false) }
-                }
+                _state.update { it.copy(isPlaying = false, isRecording = false) }
+                audioEngine.stopPlayback()
+                audioEngine.stopRecording()
             }
             SynthEvent.ToggleMic -> {
                 _state.update { it.copy(isMicEnabled = !it.isMicEnabled) }

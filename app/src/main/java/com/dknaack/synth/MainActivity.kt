@@ -88,7 +88,16 @@ import com.dknaack.synth.ui.theme.SynthTheme
 
 class MainActivity : ComponentActivity() {
     private val audioEngine by lazy { AudioEngine(this) }
-    private val synthViewModel: SynthViewModel by viewModels()
+    private val synthViewModel by viewModels<SynthViewModel>(
+        factoryProducer = {
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    @Suppress("UNCHECKED_CAST")
+                    return SynthViewModel(audioEngine) as T
+                }
+            }
+        }
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -25,10 +25,25 @@ class AudioEngine(
         handle = startEngine(defaultSampleRate, defaultFramesPerBurst)
     }
 
-    fun stop() {
-        stopEngine(handle)
+    fun stop() { stopEngine(handle) }
+
+    fun startPlayback() {
+        println(">>> Starting $handle")
+        startPlaybackNative(handle)
     }
+
+    fun stopPlayback() {
+        println(">>> Stopping $handle")
+        stopPlaybackNative(handle)
+    }
+
+    fun startRecording() { startRecordingNative(handle) }
+    fun stopRecording() { stopRecordingNative(handle) }
 
     private external fun startEngine(sampleRate: Int, framesPerBurst: Int): Long
     private external fun stopEngine(handle: Long)
+    private external fun startPlaybackNative(handle: Long)
+    private external fun stopPlaybackNative(handle: Long)
+    private external fun startRecordingNative(handle: Long)
+    private external fun stopRecordingNative(handle: Long)
 }

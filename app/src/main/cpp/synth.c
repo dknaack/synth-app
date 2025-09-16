@@ -44,6 +44,7 @@ static aaudio_data_callback_result_t
 input_callback(AAudioStream *stream, void *user_data, void *audio_data, int32_t num_frames)
 {
     AudioEngine *engine = user_data;
+
     return AAUDIO_CALLBACK_RESULT_CONTINUE;
 }
 
@@ -71,7 +72,6 @@ Java_com_dknaack_synth_AudioEngine_startEngine(
         AAudioStreamBuilder_setDataCallback(builder, output_callback, engine);
 
         AAudioStreamBuilder_openStream(builder, &engine->output_stream);
-        AAudioStream_requestStart(engine->output_stream);
         AAudioStreamBuilder_delete(builder);
     }
 
@@ -85,10 +85,8 @@ Java_com_dknaack_synth_AudioEngine_startEngine(
         AAudioStreamBuilder_setFormat(builder, AAUDIO_FORMAT_PCM_I16);
         AAudioStreamBuilder_setDataCallback(builder, input_callback, engine);
 
-        AAudioStream *record_stream;
-        AAudioStreamBuilder_openStream(builder, &record_stream);
+        AAudioStreamBuilder_openStream(builder, &engine->input_stream);
         AAudioStreamBuilder_delete(builder);
-        AAudioStream_requestStart(record_stream);
     }
 
     return (jlong)engine;
@@ -103,5 +101,41 @@ Java_com_dknaack_synth_AudioEngine_stopEngine(JNIEnv *env, jobject thiz, jlong p
         AAudioStream_close(engine->output_stream);
         AAudioStream_close(engine->input_stream);
         free(engine);
+    }
+}
+
+JNIEXPORT void JNICALL
+Java_com_dknaack_synth_AudioEngine_startPlaybackNative(JNIEnv *env, jobject thiz, jlong ptr)
+{
+    AudioEngine *engine = (AudioEngine *)ptr;
+    if (engine) {
+        AAudioStream_requestStart(engine->output_stream);
+    }
+}
+
+JNIEXPORT void JNICALL
+Java_com_dknaack_synth_AudioEngine_stopPlaybackNative(JNIEnv *env, jobject thiz, jlong ptr)
+{
+    AudioEngine *engine = (AudioEngine *)ptr;
+    if (engine) {
+        AAudioStream_requestStop(engine->output_stream);
+    }
+}
+
+JNIEXPORT void JNICALL
+Java_com_dknaack_synth_AudioEngine_startRecordingNative(JNIEnv *env, jobject thiz, jlong ptr)
+{
+    AudioEngine *engine = (AudioEngine *)ptr;
+    if (engine) {
+        AAudioStream_requestStart(engine->input_stream);
+    }
+}
+
+JNIEXPORT void JNICALL
+Java_com_dknaack_synth_AudioEngine_stopRecordingNative(JNIEnv *env, jobject thiz, jlong ptr)
+{
+    AudioEngine *engine = (AudioEngine *)ptr;
+    if (engine) {
+        AAudioStream_requestStop(engine->input_stream);
     }
 }
