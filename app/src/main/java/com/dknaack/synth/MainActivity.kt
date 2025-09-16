@@ -1,5 +1,7 @@
 package com.dknaack.synth
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -77,6 +79,10 @@ import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.dknaack.synth.ui.theme.SynthTheme
 
 
@@ -87,6 +93,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         audioEngine.start()
+
+        val permission = Manifest.permission.RECORD_AUDIO
+        if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+            val permissions = arrayOf(Manifest.permission.RECORD_AUDIO)
+            val requestCode = 123
+            ActivityCompat.requestPermissions(this, permissions, requestCode)
+        }
 
         enableEdgeToEdge()
         setContent {
