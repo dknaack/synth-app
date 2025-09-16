@@ -311,25 +311,33 @@ fun SecondaryButtonGrid(
     onEvent: (SynthEvent) -> Unit,
     state: SynthState,
 ) {
-    val icons = listOf(
-        1,
-        2,
-        3,
-        4,
-        5,
-        Icons.Default.Refresh,
-        Icons.Default.Piano,
-        Icons.Default.Edit,
-        Icons.Default.Equalizer,
-        Icons.Default.Settings,
-        Icons.AutoMirrored.Default.ArrowBack,
-        Icons.Default.MusicNote,
-        Icons.Default.ScreenRotationAlt,
+    data class ButtonData(
+        val content: Any,
+        val onClick: () -> Unit = { },
+    )
+
+    val micIcon =
         if (state.isMicEnabled)
             Icons.Default.Mic
         else
-            Icons.Default.MicOff,
-        Icons.AutoMirrored.Default.ArrowForward,
+            Icons.Default.MicOff
+
+    val buttons = listOf(
+        ButtonData(content = 1),
+        ButtonData(content = 2),
+        ButtonData(content = 3),
+        ButtonData(content = 4),
+        ButtonData(content = 5),
+        ButtonData(content = Icons.Default.Refresh),
+        ButtonData(content = Icons.Default.Piano),
+        ButtonData(content = Icons.Default.Edit),
+        ButtonData(content = Icons.Default.Equalizer),
+        ButtonData(content = Icons.Default.Settings),
+        ButtonData(content = Icons.AutoMirrored.Default.ArrowBack),
+        ButtonData(content = Icons.Default.MusicNote),
+        ButtonData(content = Icons.Default.ScreenRotationAlt),
+        ButtonData(content = micIcon, onClick = { onEvent(SynthEvent.ToggleMic) }),
+        ButtonData(content = Icons.AutoMirrored.Default.ArrowForward),
     )
 
     val provider = GoogleFont.Provider(
@@ -349,7 +357,7 @@ fun SecondaryButtonGrid(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        items(icons.withIndex().toList()) { (index, icon) ->
+        items(buttons.withIndex().toList()) { (index, button) ->
             val outerRadius = 8.dp
             val innerRadius = 2.dp
             val shape = when (index) {
@@ -360,7 +368,8 @@ fun SecondaryButtonGrid(
                 else -> RoundedCornerShape(innerRadius)
             }
 
-            SecondaryButton(shape) {
+            SecondaryButton(shape, onClick = button.onClick) {
+                val icon = button.content
                 if (icon is ImageVector) {
                     Icon(
                         imageVector = icon,
@@ -368,7 +377,7 @@ fun SecondaryButtonGrid(
                     )
                 } else if (icon is Int) {
                     Text(
-                        text = "${index+1}",
+                        text = "$icon",
                         fontFamily = fontFamily,
                         fontSize = 32.sp,
                     )
@@ -381,10 +390,11 @@ fun SecondaryButtonGrid(
 @Composable
 fun SecondaryButton(
     shape: Shape,
+    onClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {
     FilledTonalButton(
-        onClick = { },
+        onClick = onClick,
         shape = shape,
         modifier = Modifier.aspectRatio(1f),
         colors = ButtonDefaults.filledTonalButtonColors(
