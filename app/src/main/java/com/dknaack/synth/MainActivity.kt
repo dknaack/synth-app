@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Equalizer
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
@@ -95,13 +96,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val myAudioMgr = getSystemService(AUDIO_SERVICE) as AudioManager
-        val sampleRateStr = myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE)
-        val defaultSampleRate = sampleRateStr.toInt()
-        val framesPerBurstStr =
-            myAudioMgr.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER)
-        val defaultFramesPerBurst = framesPerBurstStr.toInt()
-
         enableEdgeToEdge()
         setContent {
             SynthTheme {
@@ -129,9 +123,9 @@ fun MainScreen(
                 .padding(16.dp),
         ) {
             MainDisplay(onEvent, state)
-            SecondaryButtonGrid(onEvent)
-            PrimaryButtonRow(onEvent)
-            KeyboardButtons(onEvent, modifier = Modifier.weight(1f))
+            SecondaryButtonGrid(onEvent, state)
+            PrimaryButtonRow(onEvent, state)
+            KeyboardButtons(onEvent, state, modifier = Modifier.weight(1f))
         }
     }
 }
@@ -223,6 +217,7 @@ fun MainDisplay(
 @Composable
 fun PrimaryButtonRow(
     onEvent: (SynthEvent) -> Unit,
+    state: SynthState,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(4),
@@ -295,6 +290,7 @@ fun PrimaryButton(
 @Composable
 fun SecondaryButtonGrid(
     onEvent: (SynthEvent) -> Unit,
+    state: SynthState,
 ) {
     val icons = listOf(
         1,
@@ -310,7 +306,10 @@ fun SecondaryButtonGrid(
         Icons.AutoMirrored.Default.ArrowBack,
         Icons.Default.MusicNote,
         Icons.Default.ScreenRotationAlt,
-        Icons.Default.MicOff,
+        if (state.isMicEnabled)
+            Icons.Default.Mic
+        else
+            Icons.Default.MicOff,
         Icons.AutoMirrored.Default.ArrowForward,
     )
 
@@ -380,6 +379,7 @@ fun SecondaryButton(
 @Composable
 fun KeyboardButtons(
     onEvent: (SynthEvent) -> Unit,
+    state: SynthState,
     modifier: Modifier = Modifier,
 ) {
     Column(

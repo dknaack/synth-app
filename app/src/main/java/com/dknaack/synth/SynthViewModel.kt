@@ -26,6 +26,9 @@ class SynthViewModel: ViewModel() {
                     _state.update { it.copy(isRecording = false) }
                 }
             }
+            SynthEvent.ToggleMic -> {
+                _state.update { it.copy(isMicEnabled = !it.isMicEnabled) }
+            }
         }
     }
 }
