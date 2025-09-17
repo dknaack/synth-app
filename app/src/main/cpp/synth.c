@@ -6,10 +6,14 @@
 
 typedef struct {
     AAudioStream *output_stream;
-    AAudioStream *input_stream;
     int32_t sample_rate;
     int32_t frames_per_burst;
     double phase;
+
+    AAudioStream *input_stream;
+    int16_t *input_buffer;
+    int32_t max_input_size;
+    int32_t input_size;
 } AudioEngine;
 
 static aaudio_data_callback_result_t
@@ -45,6 +49,27 @@ input_callback(AAudioStream *stream, void *user_data, void *audio_data, int32_t 
 {
     AudioEngine *engine = user_data;
 
+    int32_t num_channels = AAudioStream_getChannelCount(stream);
+    int32_t num_samples = num_frames * num_channels;
+
+    while (engine->input_size + num_samples >= engine->max_input_size) {
+        if (engine->max_input_size == 0) {
+            engine->max_input_size = engine->sample_rate * 2;
+        } else {
+            engine->max_input_size *= 2;
+        }
+
+        size_t byte_count = engine->max_input_size * sizeof(*engine->input_buffer);
+        engine->input_buffer = realloc(engine->input_buffer, byte_count);
+    }
+
+    int16_t *src = audio_data;
+    int16_t *dst = engine->input_buffer;
+    for (int32_t i = 0; i < num_samples; i++) {
+        dst[i] = src[i];
+    }
+
+    engine->input_size += num_samples;
     return AAUDIO_CALLBACK_RESULT_CONTINUE;
 }
 
