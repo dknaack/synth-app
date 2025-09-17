@@ -26,17 +26,8 @@ class AudioEngine(
     }
 
     fun stop() { stopEngine(handle) }
-
-    fun startPlayback() {
-        println(">>> Starting $handle")
-        startPlaybackNative(handle)
-    }
-
-    fun stopPlayback() {
-        println(">>> Stopping $handle")
-        stopPlaybackNative(handle)
-    }
-
+    fun startPlayback() { startPlaybackNative(handle) }
+    fun stopPlayback() { stopPlaybackNative(handle) }
     fun startRecording() { startRecordingNative(handle) }
     fun stopRecording() { stopRecordingNative(handle) }
 
